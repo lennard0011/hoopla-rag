@@ -2,8 +2,8 @@
 
 import argparse
 import json
-import string
-from nltk.stem import PorterStemmer
+from inverted_index import InvertedIndex
+from preprocessing import preprocess_string
 
 STOPWORDS = open("data/stopwords.txt").read().splitlines()
 
@@ -19,14 +19,6 @@ def get_movies(movies, query: str):
     found_movies = sorted(found_movies, key=lambda x: x['id'])         
     return found_movies[:5]
 
-def preprocess_string(s: str) -> list[str]:
-    s = s.translate(str.maketrans('', '', string.punctuation))
-    tokens = s.lower().split()
-    tokens_without_stopwords = [token for token in tokens if token not in STOPWORDS]
-    stemmer = PorterStemmer()
-    stemmed_tokens = [stemmer.stem(token) for token in tokens_without_stopwords]
-    return stemmed_tokens
-
 def print_found_movies(found_movies):
    for index, movie in enumerate(found_movies):
        print(f"{index + 1}. {movie['title']}") 
@@ -38,6 +30,8 @@ def main() -> None:
     search_parser = subparsers.add_parser("search", help="Search movies using BM25")
     search_parser.add_argument("query", type=str, help="Search query")
 
+    build_parser = subparsers.add_parser("build", help="Build the inverted index")
+
     args = parser.parse_args()
     movies = json.load(open("data/movies.json"))["movies"]
 
@@ -48,6 +42,11 @@ def main() -> None:
            
            found_movies = get_movies(movies, query)
            print_found_movies(found_movies) 
+        case "build":
+            movies_dict = {movie['id']: f"{movie['title']} {movie['description']}"for movie in movies}
+            inverted_index = InvertedIndex()
+            inverted_index.build(movies_dict)    
+            inverted_index.save()
         case _:
             parser.print_help()
 
