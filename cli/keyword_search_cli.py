@@ -37,15 +37,27 @@ def main() -> None:
 
     match args.command:
         case "search":
-           print("Searching for: QUERY") 
-           query = args.query
-           
-           found_movies = get_movies(movies, query)
-           print_found_movies(found_movies) 
-        case "build":
-            movies_dict = {movie['id']: f"{movie['title']} {movie['description']}"for movie in movies}
+            print("Searching for: QUERY") 
             inverted_index = InvertedIndex()
-            inverted_index.build(movies_dict)    
+            inverted_index.load()
+            tokens = preprocess_string(args.query)
+           
+            found_movies = []
+            for token in tokens:
+                found_movies_by_token = inverted_index.get_documents(token)
+                print(f"Found {len(found_movies_by_token)} documents for token '{token}':")
+                for doc in found_movies_by_token:
+                    found_movies.append(doc)
+                    if len(found_movies) >= 5:
+                        break
+                        
+                print_found_movies(found_movies)
+                    
+            
+           
+        case "build":
+            inverted_index = InvertedIndex()
+            inverted_index.build(movies)
             inverted_index.save()
         case _:
             parser.print_help()
