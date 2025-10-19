@@ -32,6 +32,10 @@ def main() -> None:
 
     build_parser = subparsers.add_parser("build", help="Build the inverted index")
 
+    tf_parser = subparsers.add_parser("tf", help="Get term frequency for a term in a document")
+    tf_parser.add_argument("doc_id", type=int, help="Document ID")
+    tf_parser.add_argument("term", type=str, help="Term to get frequency for")
+
     args = parser.parse_args()
     movies = json.load(open("data/movies.json"))["movies"]
 
@@ -53,12 +57,18 @@ def main() -> None:
                         
                 print_found_movies(found_movies)
                     
-            
-           
         case "build":
             inverted_index = InvertedIndex()
             inverted_index.build(movies)
             inverted_index.save()
+
+        case "tf":
+            inverted_index = InvertedIndex()
+            inverted_index.load()
+            doc_id = args.doc_id
+            term = args.term
+            tf = inverted_index.get_tf(doc_id, term)
+            print(f"Term Frequency of '{term}' in document ID {doc_id}: {tf}")
         case _:
             parser.print_help()
 

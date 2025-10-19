@@ -1,11 +1,13 @@
 import os
 from preprocessing import preprocess_string
 import pickle
+from collections import Counter
 
 class InvertedIndex:
     def __init__(self):
         self.index: dict[str, set[int]] = {}
         self.docmap: dict[int, object] = {}
+        self.term_frequencies: dict[int, Counter] = {} 
 
     def __add_document(self, document: dict):
         print(f"Indexing document ID: {document['id']}")
@@ -17,6 +19,7 @@ class InvertedIndex:
         tokens = preprocess_string(text)
         for token in tokens:
             self.__add_to_index(token, doc_id)
+        self.term_frequencies[doc_id] = Counter(tokens)
 
     def __add_to_index(self, token : str, doc_id: int):
         if token not in self.index:
@@ -26,6 +29,13 @@ class InvertedIndex:
     def get_documents(self, token: str) -> list[object]:
         doc_ids = sorted(self.index.get(token, set()), key=lambda x: int(x))
         return [self.docmap[doc_id] for doc_id in doc_ids]
+    
+    def get_tf(self, doc_id: int, term: str) -> int:
+        tokens = preprocess_string(term)
+        if len(tokens) != 1:
+            raise ValueError("Term must be a single token")
+        term_token = tokens[0]
+        return self.term_frequencies.get(doc_id, Counter()).get(term_token, 0)
 
     def build(self, documents: list[dict]):
         for document in documents:
@@ -39,6 +49,9 @@ class InvertedIndex:
         
         with open('cache/dockmap.pkl', 'wb') as file:
             pickle.dump(self.docmap, file)
+        
+        with open('cache/term_frequencies.pkl', 'wb') as file:
+            pickle.dump(self.term_frequencies, file)
     
     def load(self):
         with open('cache/index.pkl', 'rb') as file:
@@ -46,4 +59,7 @@ class InvertedIndex:
         
         with open('cache/dockmap.pkl', 'rb') as file:
             self.docmap = pickle.load(file)
+        
+        with open('cache/term_frequencies.pkl', 'rb') as file:
+            self.term_frequencies = pickle.load(file)
         
