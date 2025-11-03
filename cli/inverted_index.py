@@ -36,6 +36,16 @@ class InvertedIndex:
             raise ValueError("Term must be a single token")
         term_token = tokens[0]
         return self.term_frequencies.get(doc_id, Counter()).get(term_token, 0)
+    
+    def get_number_of_documents(self) -> int:
+        return len(self.docmap)
+
+    def get_number_of_documents_with_term(self, term: str) -> int:
+        tokens = preprocess_string(term)
+        if len(tokens) != 1:
+            raise ValueError("Term must be a single token")
+        term_token = tokens[0]
+        return len(self.index.get(term_token, set()))
 
     def build(self, documents: list[dict]):
         for document in documents:

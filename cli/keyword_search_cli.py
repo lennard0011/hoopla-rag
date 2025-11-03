@@ -2,6 +2,7 @@
 
 import argparse
 import json
+import math
 from inverted_index import InvertedIndex
 from preprocessing import preprocess_string
 
@@ -36,6 +37,9 @@ def main() -> None:
     tf_parser.add_argument("doc_id", type=int, help="Document ID")
     tf_parser.add_argument("term", type=str, help="Term to get frequency for")
 
+    idf_parser = subparsers.add_parser("idf", help="Get inverse document frequency for a term")
+    idf_parser.add_argument("term", type=str, help="Term to get IDF for")
+
     args = parser.parse_args()
     movies = json.load(open("data/movies.json"))["movies"]
 
@@ -69,6 +73,17 @@ def main() -> None:
             term = args.term
             tf = inverted_index.get_tf(doc_id, term)
             print(f"Term Frequency of '{term}' in document ID {doc_id}: {tf}")
+        
+        case "idf":
+            term = args.term
+            inverted_index = InvertedIndex()
+            inverted_index.load()
+            
+            number_of_documents = inverted_index.get_number_of_documents()
+            term_doc_count = inverted_index.get_number_of_documents_with_term(term)
+            idf = math.log((number_of_documents + 1) / (term_doc_count + 1))
+            
+            print(f"Inverse document frequency of '{args.term}': {idf:.2f}") 
         case _:
             parser.print_help()
 
